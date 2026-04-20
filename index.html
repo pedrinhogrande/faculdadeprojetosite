@@ -736,8 +736,10 @@ tbody tr:hover td { background: var(--bg-secondary); }
 const SUPABASE_URL = 'https://llgcyhdmmxkvyjjtpjyh.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_GMoVv-wlmcgBaDeOwPwJqQ_GpLgug9r';
 
-const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
 
 // ═══════════════════════════════════════════════════════════
 //  TOAST SYSTEM
@@ -2317,14 +2319,14 @@ init();
 
 <script>
   async function loginGoogle() {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google'
-    });
+  const { data, error } = await sb.auth.signInWithOAuth({
+    provider: 'google'
+  });
 
-    if (error) {
-      alert(error.message);
-      console.error(error);
-    }
+  if (error) {
+    console.error(error);
+    alert(error.message);
   }
+}
 </script>
 </html>
