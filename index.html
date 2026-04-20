@@ -1,0 +1,2330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FASUPEvents — Plataforma de Eventos Acadêmicos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"></script>
+<style>
+:root {
+  --blue-900: #0A1628;
+  --blue-800: #0D1F3C;
+  --blue-700: #102A52;
+  --blue-600: #1A3A6B;
+  --blue-500: #1E50A0;
+  --blue-400: #2563EB;
+  --blue-300: #3B82F6;
+  --blue-200: #93C5FD;
+  --blue-100: #DBEAFE;
+  --yellow-500: #F59E0B;
+  --yellow-400: #FBBF24;
+  --yellow-300: #FCD34D;
+  --white: #FFFFFF;
+  --gray-50: #F8FAFC;
+  --gray-100: #F1F5F9;
+  --gray-200: #E2E8F0;
+  --gray-300: #CBD5E1;
+  --gray-400: #94A3B8;
+  --gray-500: #64748B;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1E293B;
+  --gray-900: #0F172A;
+
+  --bg: #FFFFFF;
+  --bg-secondary: #F8FAFC;
+  --bg-tertiary: #F1F5F9;
+  --surface: #FFFFFF;
+  --surface-2: #F8FAFC;
+  --border: #E2E8F0;
+  --border-subtle: #F1F5F9;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+  --shadow-xl: 0 24px 64px rgba(0,0,0,0.16);
+  --accent: #2563EB;
+  --accent-hover: #1D4ED8;
+  --accent-light: #EFF6FF;
+  --yellow: #F59E0B;
+  --yellow-light: #FFFBEB;
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+[data-theme="dark"] {
+  --bg: #080E1A;
+  --bg-secondary: #0D1525;
+  --bg-tertiary: #111D30;
+  --surface: #0F1C30;
+  --surface-2: #14243D;
+  --border: #1E3050;
+  --border-subtle: #172540;
+  --text-primary: #F0F6FF;
+  --text-secondary: #8BAFD4;
+  --text-muted: #4A6A8A;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow: 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.6);
+  --shadow-xl: 0 24px 64px rgba(0,0,0,0.7);
+  --accent: #3B82F6;
+  --accent-hover: #60A5FA;
+  --accent-light: #0F1C30;
+  --yellow: #FBBF24;
+  --yellow-light: #1A1200;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+  transition: background var(--transition), color var(--transition);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+/* ─── TYPOGRAPHY ─── */
+h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; font-weight: 700; line-height: 1.2; }
+
+/* ─── LAYOUT ─── */
+.app-container { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ─── NAVBAR ─── */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 0 24px;
+  height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition);
+}
+
+.navbar-brand {
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.navbar-logo {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--blue-500), var(--blue-300));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 14px; color: white; letter-spacing: -0.5px;
+  box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+}
+.navbar-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; color: var(--text-primary); }
+.navbar-title span { color: var(--yellow); }
+
+.navbar-nav { display: flex; align-items: center; gap: 4px; }
+.nav-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  border: none; background: transparent;
+  color: var(--text-secondary);
+  transition: all var(--transition);
+  font-family: 'DM Sans', sans-serif;
+}
+.nav-btn:hover { background: var(--bg-secondary); color: var(--text-primary); }
+.nav-btn.active { background: var(--accent-light); color: var(--accent); }
+
+.navbar-actions { display: flex; align-items: center; gap: 8px; }
+
+/* ─── THEME TOGGLE ─── */
+.theme-toggle {
+  width: 40px; height: 40px; border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 18px;
+  transition: all var(--transition);
+}
+.theme-toggle:hover { border-color: var(--accent); transform: scale(1.05); }
+
+/* ─── AVATAR / USER MENU ─── */
+.user-avatar {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--blue-500), var(--yellow-400));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px;
+  color: white; cursor: pointer;
+  transition: all var(--transition);
+  border: 2px solid transparent;
+}
+.user-avatar:hover { border-color: var(--accent); }
+
+/* ─── MAIN CONTENT ─── */
+.main-content { flex: 1; padding: 32px 24px; max-width: 1200px; margin: 0 auto; width: 100%; }
+
+/* ─── BUTTONS ─── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; padding: 10px 20px; border-radius: var(--radius);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  border: none; transition: all var(--transition);
+  font-family: 'DM Sans', sans-serif; line-height: 1;
+  white-space: nowrap;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+.btn-primary {
+  background: var(--accent); color: white;
+  box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+}
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,99,235,0.4); }
+.btn-secondary {
+  background: var(--bg-secondary); color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.btn-yellow {
+  background: var(--yellow); color: #1A1A00;
+  box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+}
+.btn-yellow:hover:not(:disabled) { background: var(--yellow-400); transform: translateY(-1px); }
+.btn-danger { background: #EF4444; color: white; }
+.btn-danger:hover:not(:disabled) { background: #DC2626; }
+.btn-ghost { background: transparent; color: var(--text-secondary); }
+.btn-ghost:hover:not(:disabled) { background: var(--bg-secondary); color: var(--text-primary); }
+.btn-sm { padding: 7px 14px; font-size: 13px; }
+.btn-lg { padding: 14px 28px; font-size: 16px; border-radius: var(--radius-lg); }
+.btn-icon { width: 36px; height: 36px; padding: 0; border-radius: var(--radius-sm); }
+
+/* ─── CARDS ─── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  transition: all var(--transition);
+}
+.card:hover { box-shadow: var(--shadow-lg); }
+.card-hover:hover { transform: translateY(-2px); }
+
+/* ─── FORMS ─── */
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.02em; text-transform: uppercase; }
+.form-input, .form-select, .form-textarea {
+  padding: 11px 14px; border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-primary); font-size: 15px;
+  font-family: 'DM Sans', sans-serif;
+  transition: all var(--transition);
+  outline: none; width: 100%;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+.form-textarea { resize: vertical; min-height: 100px; }
+
+/* ─── BADGES ─── */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 99px;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+}
+.badge-blue { background: var(--accent-light); color: var(--accent); }
+.badge-green { background: #ECFDF5; color: #059669; }
+.badge-yellow { background: var(--yellow-light); color: #D97706; }
+.badge-red { background: #FEF2F2; color: #EF4444; }
+.badge-gray { background: var(--bg-secondary); color: var(--text-muted); }
+[data-theme="dark"] .badge-green { background: #064E3B; color: #34D399; }
+[data-theme="dark"] .badge-yellow { background: #292100; color: #FCD34D; }
+[data-theme="dark"] .badge-red { background: #450A0A; color: #F87171; }
+
+/* ─── ALERT ─── */
+.alert {
+  padding: 12px 16px; border-radius: var(--radius);
+  font-size: 14px; display: flex; align-items: flex-start; gap: 10px;
+  border: 1px solid;
+}
+.alert-success { background: #ECFDF5; border-color: #A7F3D0; color: #065F46; }
+.alert-error { background: #FEF2F2; border-color: #FECACA; color: #991B1B; }
+.alert-info { background: var(--accent-light); border-color: var(--blue-200); color: #1D4ED8; }
+.alert-warning { background: var(--yellow-light); border-color: #FDE68A; color: #92400E; }
+[data-theme="dark"] .alert-success { background: #064E3B; border-color: #065F46; color: #34D399; }
+[data-theme="dark"] .alert-error { background: #450A0A; border-color: #7F1D1D; color: #F87171; }
+[data-theme="dark"] .alert-info { background: var(--accent-light); border-color: var(--blue-600); color: var(--blue-200); }
+
+/* ─── MODALS ─── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.2s ease;
+}
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  max-width: 520px; width: 100%;
+  box-shadow: var(--shadow-xl);
+  animation: slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+  max-height: 90vh; overflow-y: auto;
+}
+.modal-lg { max-width: 720px; }
+
+/* ─── LOADING ─── */
+.spinner {
+  width: 20px; height: 20px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+.loading-overlay {
+  display: flex; align-items: center; justify-content: center;
+  padding: 60px; flex-direction: column; gap: 16px;
+}
+.loading-text { color: var(--text-muted); font-size: 14px; }
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 60px 24px; gap: 16px;
+  text-align: center;
+}
+.empty-icon { font-size: 48px; opacity: 0.4; }
+.empty-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-primary); }
+.empty-desc { font-size: 14px; color: var(--text-muted); max-width: 320px; }
+
+/* ─── PAGE HEADER ─── */
+.page-header { margin-bottom: 32px; }
+.page-header h1 { font-size: 32px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; }
+.page-header p { color: var(--text-secondary); font-size: 15px; }
+.page-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+/* ─── GRID ─── */
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+
+/* ─── STATS ─── */
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px 24px;
+  display: flex; flex-direction: column; gap: 8px;
+  box-shadow: var(--shadow); transition: all var(--transition);
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.stat-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.stat-value { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; color: var(--text-primary); }
+.stat-sub { font-size: 13px; color: var(--text-muted); }
+.stat-icon { font-size: 28px; margin-bottom: 4px; }
+
+/* ─── EVENT CARD ─── */
+.event-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  box-shadow: var(--shadow); transition: all var(--transition);
+  cursor: pointer; display: flex; flex-direction: column;
+}
+.event-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--accent); }
+.event-card-banner {
+  width: 100%; height: 160px;
+  background: linear-gradient(135deg, var(--blue-700), var(--blue-500));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 48px; overflow: hidden; position: relative;
+}
+.event-card-banner img { width: 100%; height: 100%; object-fit: cover; }
+.event-card-banner-text {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, rgba(10,22,40,0.8), rgba(30,80,160,0.6));
+  color: white; font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800;
+  padding: 20px; text-align: center; letter-spacing: -0.5px;
+}
+.event-card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.event-card-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
+.event-card-meta { display: flex; flex-direction: column; gap: 4px; }
+.event-meta-item { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-secondary); }
+.event-meta-icon { font-size: 14px; }
+.event-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border-subtle); }
+.event-price { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; color: var(--text-primary); }
+.event-price.free { color: #059669; }
+.slots-bar { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; margin-top: 4px; }
+.slots-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--blue-300)); transition: width 0.6s ease; }
+
+/* ─── TABS ─── */
+.tabs { display: flex; gap: 4px; background: var(--bg-secondary); padding: 4px; border-radius: var(--radius); border: 1px solid var(--border); width: fit-content; }
+.tab-btn {
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  border: none; background: transparent;
+  color: var(--text-secondary); transition: all var(--transition);
+  font-family: 'DM Sans', sans-serif;
+}
+.tab-btn.active { background: var(--surface); color: var(--text-primary); box-shadow: var(--shadow-sm); font-weight: 600; }
+
+/* ─── DIVIDER ─── */
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+.divider-text { display: flex; align-items: center; gap: 12px; color: var(--text-muted); font-size: 13px; margin: 20px 0; }
+.divider-text::before, .divider-text::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ─── QR CODE ─── */
+.qr-container {
+  background: white; padding: 20px; border-radius: var(--radius-lg);
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-lg);
+}
+
+/* ─── CAMERA SCANNER ─── */
+.scanner-container {
+  position: relative; width: 100%; max-width: 400px;
+  margin: 0 auto; border-radius: var(--radius-lg); overflow: hidden;
+  background: #000;
+}
+.scanner-video { width: 100%; display: block; }
+.scanner-overlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.scanner-frame {
+  width: 200px; height: 200px;
+  border: 3px solid var(--yellow);
+  border-radius: var(--radius);
+  position: relative;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
+  animation: pulse 2s ease-in-out infinite;
+}
+.scanner-line {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px; background: var(--yellow);
+  animation: scanline 2s ease-in-out infinite;
+}
+
+/* ─── CERTIFICATE ─── */
+.certificate-card {
+  background: linear-gradient(135deg, var(--blue-900), var(--blue-700));
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-xl); padding: 28px;
+  position: relative; overflow: hidden;
+  color: white;
+}
+.certificate-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.certificate-badge { font-size: 32px; margin-bottom: 12px; }
+.certificate-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+.certificate-event { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; margin-bottom: 12px; }
+.certificate-code { font-family: monospace; font-size: 12px; padding: 6px 12px; background: rgba(255,255,255,0.1); border-radius: var(--radius-sm); display: inline-block; letter-spacing: 0.1em; }
+.certificate-meta { display: flex; gap: 16px; margin-top: 16px; font-size: 13px; opacity: 0.7; flex-wrap: wrap; }
+
+/* ─── LANDING ─── */
+.landing-hero {
+  min-height: calc(100vh - 64px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 60px 24px;
+  background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(37,99,235,0.15) 0%, transparent 70%);
+  position: relative; overflow: hidden;
+}
+.landing-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%232563EB' fill-opacity='0.04' fill-rule='evenodd'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px; border-radius: 99px;
+  background: var(--accent-light); border: 1px solid rgba(37,99,235,0.2);
+  color: var(--accent); font-size: 13px; font-weight: 600;
+  margin-bottom: 28px; animation: fadeDown 0.6s ease both;
+}
+.hero-title {
+  font-family: 'Syne', sans-serif; font-size: clamp(40px, 7vw, 72px); font-weight: 800;
+  line-height: 1.1; max-width: 700px; margin-bottom: 20px;
+  animation: fadeDown 0.7s ease 0.1s both;
+  letter-spacing: -2px;
+}
+.hero-title span { color: var(--yellow); }
+.hero-sub {
+  font-size: 18px; color: var(--text-secondary); max-width: 520px;
+  margin-bottom: 40px; line-height: 1.7;
+  animation: fadeDown 0.7s ease 0.2s both;
+}
+.hero-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; animation: fadeDown 0.7s ease 0.3s both; }
+.hero-stats {
+  display: flex; gap: 40px; margin-top: 60px; flex-wrap: wrap; justify-content: center;
+  animation: fadeDown 0.7s ease 0.4s both;
+}
+.hero-stat { text-align: center; }
+.hero-stat-val { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; color: var(--text-primary); }
+.hero-stat-label { font-size: 13px; color: var(--text-muted); }
+
+.features-section { padding: 80px 24px; max-width: 1100px; margin: 0 auto; }
+.section-title { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; text-align: center; margin-bottom: 12px; }
+.section-sub { text-align: center; color: var(--text-secondary); font-size: 16px; margin-bottom: 48px; }
+.feature-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 28px;
+  transition: all var(--transition); box-shadow: var(--shadow);
+}
+.feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--accent); }
+.feature-icon { font-size: 36px; margin-bottom: 16px; }
+.feature-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.feature-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+
+/* ─── AUTH PAGE ─── */
+.auth-wrapper {
+  min-height: calc(100vh - 64px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px 24px;
+  background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(37,99,235,0.08) 0%, transparent 60%);
+}
+.auth-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 40px;
+  max-width: 440px; width: 100%;
+  box-shadow: var(--shadow-xl);
+  animation: slideUp 0.4s ease;
+}
+.auth-logo { font-size: 40px; margin-bottom: 8px; }
+.auth-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 6px; }
+.auth-sub { color: var(--text-secondary); font-size: 15px; margin-bottom: 32px; }
+.btn-google {
+  width: 100%; padding: 12px; border-radius: var(--radius);
+  border: 1.5px solid var(--border); background: var(--surface);
+  color: var(--text-primary); font-size: 15px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: all var(--transition); font-family: 'DM Sans', sans-serif;
+}
+.btn-google:hover { border-color: var(--accent); background: var(--bg-secondary); }
+.google-icon {
+  width: 20px; height: 20px;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%234285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="%2334A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="%23FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="%23EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>') center/contain no-repeat;
+}
+
+/* ─── ADMIN PANEL ─── */
+.admin-layout { display: grid; grid-template-columns: 240px 1fr; gap: 24px; min-height: calc(100vh - 64px - 64px); }
+.admin-sidebar {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px;
+  height: fit-content; position: sticky; top: 80px;
+  box-shadow: var(--shadow);
+}
+.sidebar-section { margin-bottom: 8px; }
+.sidebar-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; padding: 8px 10px 4px; }
+.sidebar-btn {
+  width: 100%; padding: 9px 12px; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  border: none; background: transparent; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 10px;
+  transition: all var(--transition); text-align: left;
+  font-family: 'DM Sans', sans-serif;
+}
+.sidebar-btn:hover { background: var(--bg-secondary); color: var(--text-primary); }
+.sidebar-btn.active { background: var(--accent-light); color: var(--accent); font-weight: 600; }
+
+/* ─── TABLE ─── */
+.table-wrap { overflow-x: auto; border-radius: var(--radius-lg); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; background: var(--surface); }
+thead th {
+  padding: 12px 16px; text-align: left;
+  font-size: 12px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  white-space: nowrap;
+}
+tbody td { padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); font-size: 14px; color: var(--text-primary); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--bg-secondary); }
+
+/* ─── PROGRESS ─── */
+.progress-bar { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--blue-300)); transition: width 0.6s ease; }
+
+/* ─── TOAST ─── */
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+.toast {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 18px;
+  box-shadow: var(--shadow-xl); font-size: 14px; font-weight: 500;
+  display: flex; align-items: center; gap: 10px;
+  animation: slideInRight 0.3s ease; pointer-events: auto;
+  max-width: 340px;
+}
+.toast-success { border-left: 3px solid #059669; }
+.toast-error { border-left: 3px solid #EF4444; }
+.toast-info { border-left: 3px solid var(--accent); }
+
+/* ─── DROPDOWN ─── */
+.dropdown { position: relative; }
+.dropdown-menu {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 6px;
+  min-width: 200px; box-shadow: var(--shadow-xl);
+  z-index: 200; animation: fadeIn 0.15s ease;
+}
+.dropdown-item {
+  width: 100%; padding: 9px 12px; border-radius: var(--radius-sm);
+  font-size: 14px; cursor: pointer; border: none; background: transparent;
+  color: var(--text-primary); text-align: left;
+  display: flex; align-items: center; gap: 10px;
+  transition: background var(--transition); font-family: 'DM Sans', sans-serif;
+}
+.dropdown-item:hover { background: var(--bg-secondary); }
+.dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+/* ─── ANIMATIONS ─── */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes scanline { 0% { top: 0; } 50% { top: calc(100% - 3px); } 100% { top: 0; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+.skeleton {
+  background: linear-gradient(90deg, var(--border) 25%, var(--bg-secondary) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── MOBILE NAV ─── */
+.mobile-nav {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); z-index: 100;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+}
+.mobile-nav-grid { display: grid; grid-template-columns: repeat(5, 1fr); }
+.mobile-nav-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 6px; cursor: pointer; border: none; background: transparent;
+  color: var(--text-muted); transition: color var(--transition);
+  font-size: 10px; font-weight: 600; font-family: 'DM Sans', sans-serif;
+}
+.mobile-nav-btn.active { color: var(--accent); }
+.mobile-nav-icon { font-size: 20px; }
+.mobile-body-pad { padding-bottom: 80px; }
+
+@media (max-width: 768px) {
+  .navbar-nav { display: none; }
+  .mobile-nav { display: block; }
+  .main-content { padding: 24px 16px; }
+  .admin-layout { grid-template-columns: 1fr; }
+  .admin-sidebar { position: static; }
+  .hero-title { letter-spacing: -1px; }
+  .auth-card { padding: 28px 20px; }
+}
+
+/* ─── DETAIL BANNER ─── */
+.event-detail-banner {
+  width: 100%; height: 240px;
+  background: linear-gradient(135deg, var(--blue-900), var(--blue-600));
+  border-radius: var(--radius-xl); overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 72px; position: relative; margin-bottom: 28px;
+}
+.event-detail-content { position: relative; z-index: 1; }
+
+/* ─── PAYMENT CARD ─── */
+.payment-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; box-shadow: var(--shadow);
+  transition: all var(--transition);
+}
+.payment-card:hover { box-shadow: var(--shadow-lg); }
+
+/* ─── TOGGLE ─── */
+.toggle {
+  width: 44px; height: 24px; border-radius: 99px;
+  background: var(--border); position: relative; cursor: pointer;
+  transition: background var(--transition); border: none;
+  flex-shrink: 0;
+}
+.toggle.on { background: var(--accent); }
+.toggle::after {
+  content: ''; position: absolute;
+  width: 18px; height: 18px; border-radius: 50%; background: white;
+  top: 3px; left: 3px; transition: transform var(--transition);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.toggle.on::after { transform: translateX(20px); }
+
+/* ─── CHIPS ─── */
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 99px; font-size: 13px;
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  color: var(--text-secondary); cursor: pointer; transition: all var(--transition);
+  font-weight: 500;
+}
+.chip:hover, .chip.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+
+/* SCROLLABLE CHIPS */
+.chip-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.chip-row::-webkit-scrollbar { display: none; }
+
+/* ─── INLINE FLEX HELPERS ─── */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
+.gap-6 { gap: 24px; }
+.mt-2 { margin-top: 8px; }
+.mt-4 { margin-top: 16px; }
+.mt-6 { margin-top: 24px; }
+.mb-2 { margin-bottom: 8px; }
+.mb-4 { margin-bottom: 16px; }
+.mb-6 { margin-bottom: 24px; }
+.w-full { width: 100%; }
+.text-sm { font-size: 13px; }
+.text-xs { font-size: 12px; }
+.text-muted { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+.font-bold { font-weight: 700; }
+.text-center { text-align: center; }
+.relative { position: relative; }
+.overflow-hidden { overflow: hidden; }
+.rounded { border-radius: var(--radius); }
+.shadow { box-shadow: var(--shadow); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="toast-container" class="toast-container"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  SUPABASE CONFIG
+//  👉 Cole suas credenciais aqui:
+// ═══════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://llgcyhdmmxkvyjjtpjyh.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_GMoVv-wlmcgBaDeOwPwJqQ_GpLgug9r';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ═══════════════════════════════════════════════════════════
+//  TOAST SYSTEM
+// ═══════════════════════════════════════════════════════════
+function showToast(msg, type = 'info', duration = 4000) {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `<span>${icons[type]||'💬'}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(20px)'; t.style.transition = '0.3s ease'; setTimeout(() => t.remove(), 300); }, duration);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  THEME
+// ═══════════════════════════════════════════════════════════
+function getTheme() {
+  const saved = localStorage.getItem('fasup-theme');
+  if (saved) return saved;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('fasup-theme', t);
+}
+setTheme(getTheme());
+
+// ═══════════════════════════════════════════════════════════
+//  STATE MANAGER (vanilla reactive)
+// ═══════════════════════════════════════════════════════════
+const state = {
+  session: null,
+  profile: null,
+  page: 'landing',
+  loading: false,
+  theme: getTheme(),
+  events: [],
+  myRegistrations: [],
+  myPayments: [],
+  myQRCodes: [],
+  myCertificates: [],
+  adminSection: 'overview',
+  allEvents: [],
+  allRegistrations: [],
+  allPayments: [],
+  allAttendance: [],
+  dropdownOpen: false,
+  selectedEvent: null,
+  modal: null,
+  filters: { category: 'all', type: 'all', search: '' },
+};
+
+const listeners = [];
+function subscribe(fn) { listeners.push(fn); }
+function setState(patch) {
+  Object.assign(state, patch);
+  listeners.forEach(fn => fn(state));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  AUTH HELPERS
+// ═══════════════════════════════════════════════════════════
+async function loadProfile(userId) {
+  const { data, error } = await sb.from('profiles').select('*').eq('id', userId).single();
+  if (error) { console.error('Profile error:', error); return null; }
+  return data;
+}
+
+async function signUp(name, email, password) {
+  setState({ loading: true });
+  const { data, error } = await sb.auth.signUp({
+    email, password,
+    options: { data: { full_name: name } }
+  });
+  setState({ loading: false });
+  if (error) throw error;
+  return data;
+}
+
+async function signIn(email, password) {
+  setState({ loading: true });
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) { setState({ loading: false }); throw error; }
+  const profile = await loadProfile(data.user.id);
+  setState({ loading: false, session: data.session, profile });
+  return { session: data.session, profile };
+}
+
+async function signInGoogle() {
+  await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  setState({ session: null, profile: null, page: 'landing' });
+  showToast('Até logo!', 'info');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DATA LOADERS
+// ═══════════════════════════════════════════════════════════
+async function loadPublicEvents() {
+  const { data, error } = await sb.from('events')
+    .select('*, event_categories(name)')
+    .eq('status', 'published')
+    .order('event_date', { ascending: true });
+  if (!error) setState({ events: data || [] });
+}
+
+async function loadMyRegistrations() {
+  const { data, error } = await sb.from('registrations')
+    .select('*, events(title, event_date, start_time, end_time, location, event_type, price, workload_hours)')
+    .eq('user_id', state.profile?.id)
+    .order('created_at', { ascending: false });
+  if (!error) setState({ myRegistrations: data || [] });
+}
+
+async function loadMyPayments() {
+  const { data, error } = await sb.from('payments')
+    .select('*, events(title, event_date), registrations(status)')
+    .eq('user_id', state.profile?.id)
+    .order('created_at', { ascending: false });
+  if (!error) setState({ myPayments: data || [] });
+}
+
+async function loadMyQRCodes() {
+  const { data, error } = await sb.from('attendance_qr_codes')
+    .select('*, events(title, event_date, start_time)')
+    .eq('user_id', state.profile?.id)
+    .order('created_at', { ascending: false });
+  if (!error) setState({ myQRCodes: data || [] });
+}
+
+async function loadMyCertificates() {
+  const { data, error } = await sb.from('certificates')
+    .select('*, events(title, event_date, workload_hours)')
+    .eq('user_id', state.profile?.id)
+    .order('issued_at', { ascending: false });
+  if (!error) setState({ myCertificates: data || [] });
+}
+
+// Admin loaders
+async function loadAllEvents() {
+  const { data } = await sb.from('events').select('*, event_categories(name), profiles(full_name)').order('created_at', { ascending: false });
+  setState({ allEvents: data || [] });
+}
+async function loadAllPayments() {
+  const { data } = await sb.from('payments').select('*, events(title), profiles(full_name, email)').order('created_at', { ascending: false });
+  setState({ allPayments: data || [] });
+}
+async function loadAllRegistrations() {
+  const { data } = await sb.from('registrations').select('*, events(title), profiles(full_name, email)').order('created_at', { ascending: false });
+  setState({ allRegistrations: data || [] });
+}
+async function loadAllAttendance() {
+  const { data } = await sb.from('attendance_logs').select('*, events(title), profiles!attendance_logs_user_id_fkey(full_name, email)').order('validated_at', { ascending: false });
+  setState({ allAttendance: data || [] });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RPC ACTIONS
+// ═══════════════════════════════════════════════════════════
+async function registerForEvent(eventId) {
+  setState({ loading: true });
+  const { data, error } = await sb.rpc('create_registration', { p_event_id: eventId });
+  setState({ loading: false });
+  if (error) { showToast(error.message, 'error'); return; }
+  showToast('Inscrição realizada com sucesso! 🎉', 'success');
+  await loadMyRegistrations();
+  await loadPublicEvents();
+}
+
+async function generateQR(registrationId) {
+  setState({ loading: true });
+  const { data, error } = await sb.rpc('generate_attendance_qr', { p_registration_id: registrationId });
+  setState({ loading: false });
+  if (error) { showToast(error.message, 'error'); return; }
+  showToast('QR Code gerado! ✅', 'success');
+  await loadMyQRCodes();
+  navigate('qrcode');
+}
+
+async function issueCertificate(registrationId) {
+  setState({ loading: true });
+  const { data, error } = await sb.rpc('issue_certificate', { p_registration_id: registrationId });
+  setState({ loading: false });
+  if (error) { showToast(error.message, 'error'); return; }
+  showToast('Certificado emitido! 🏆', 'success');
+  await loadMyCertificates();
+  navigate('certificates');
+}
+
+async function confirmPayment(paymentId, method, txId) {
+  const { error } = await sb.rpc('confirm_payment', {
+    p_payment_id: paymentId,
+    p_method: method,
+    p_transaction_id: txId || null
+  });
+  if (error) { showToast(error.message, 'error'); return false; }
+  showToast('Pagamento confirmado! ✅', 'success');
+  await loadAllPayments();
+  return true;
+}
+
+async function validateAttendance(token) {
+  const { error } = await sb.rpc('validate_attendance_by_token', { p_qr_token: token });
+  if (error) { showToast(error.message, 'error'); return false; }
+  showToast('Presença validada! ✅', 'success');
+  return true;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════════
+function navigate(page, extra = {}) {
+  setState({ page, dropdownOpen: false, ...extra });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (page === 'events') loadPublicEvents();
+  if (page === 'dashboard') { loadMyRegistrations(); loadPublicEvents(); loadMyCertificates(); }
+  if (page === 'registrations') loadMyRegistrations();
+  if (page === 'payments') loadMyPayments();
+  if (page === 'qrcode') loadMyQRCodes();
+  if (page === 'certificates') loadMyCertificates();
+  if (page === 'admin') {
+    loadAllEvents(); loadAllPayments(); loadAllRegistrations(); loadAllAttendance();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════════════
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+function fmtDateTime(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+function fmtPrice(p) {
+  if (!p || p === 0) return 'Gratuito';
+  return `R$ ${parseFloat(p).toFixed(2).replace('.', ',')}`;
+}
+function getInitials(name) {
+  if (!name) return '?';
+  return name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
+}
+function getStatusBadge(status) {
+  const map = {
+    pending: ['badge-yellow', '⏳ Pendente'],
+    confirmed: ['badge-green', '✅ Confirmado'],
+    canceled: ['badge-red', '❌ Cancelado'],
+    waitlist: ['badge-gray', '📋 Lista de espera'],
+    paid: ['badge-green', '💳 Pago'],
+    failed: ['badge-red', '❌ Falhou'],
+    refunded: ['badge-gray', '↩️ Estornado'],
+    published: ['badge-green', '🟢 Publicado'],
+    draft: ['badge-gray', '📝 Rascunho'],
+    closed: ['badge-blue', '🔒 Encerrado'],
+    active: ['badge-green', '✅ Ativo'],
+    used: ['badge-gray', '✅ Usado'],
+    expired: ['badge-red', '⏰ Expirado'],
+  };
+  const [cls, label] = map[status] || ['badge-gray', status];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+function getCategoryEmoji(cat) {
+  const m = { 'Saúde': '🏥', 'Tecnologia': '💻', 'Educação': '📚', 'Empreendedorismo': '🚀' };
+  return m[cat] || '🎓';
+}
+function filledPct(e) { return Math.round((e.filled_slots / e.max_slots) * 100); }
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER ENGINE
+// ═══════════════════════════════════════════════════════════
+function render(s) {
+  const root = document.getElementById('root');
+  if (!root) return;
+
+  const isLoggedIn = !!s.session;
+  const isAdmin = s.profile?.role === 'admin';
+  const isDark = s.theme === 'dark';
+
+  // ─── NAVBAR ───
+  const navItems = isLoggedIn ? [
+    { id: 'events', label: '🗓 Eventos' },
+    { id: 'dashboard', label: '📊 Dashboard' },
+    ...(isAdmin ? [{ id: 'admin', label: '⚙️ Admin' }] : [])
+  ] : [
+    { id: 'events', label: '🗓 Eventos' },
+  ];
+
+  const userMenu = isLoggedIn ? `
+    <div class="dropdown" id="user-dropdown">
+      <div class="user-avatar" onclick="toggleDropdown()">${getInitials(s.profile?.full_name || s.profile?.email)}</div>
+      ${s.dropdownOpen ? `
+      <div class="dropdown-menu">
+        <div style="padding:8px 12px;border-bottom:1px solid var(--border);margin-bottom:6px">
+          <div style="font-weight:700;font-size:14px">${s.profile?.full_name || 'Usuário'}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${s.profile?.email || ''}</div>
+          ${isAdmin ? `<span class="badge badge-yellow" style="margin-top:4px">⚙️ Admin</span>` : ''}
+        </div>
+        <button class="dropdown-item" onclick="navigate('dashboard')">📊 Dashboard</button>
+        <button class="dropdown-item" onclick="navigate('registrations')">🎫 Minhas Inscrições</button>
+        <button class="dropdown-item" onclick="navigate('payments')">💳 Meus Pagamentos</button>
+        <button class="dropdown-item" onclick="navigate('qrcode')">📱 Meu QR Code</button>
+        <button class="dropdown-item" onclick="navigate('certificates')">🏆 Certificados</button>
+        <button class="dropdown-item" onclick="navigate('settings')">⚙️ Configurações</button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item" style="color:#EF4444" onclick="signOut()">🚪 Sair</button>
+      </div>` : ''}
+    </div>` : `
+    <button class="btn btn-primary btn-sm" onclick="navigate('auth')">Entrar</button>`;
+
+  const navbar = `
+    <nav class="navbar">
+      <div class="navbar-brand" onclick="navigate('landing')">
+        <div class="navbar-logo">F</div>
+        <span class="navbar-title">FASUP<span>Events</span></span>
+      </div>
+      <div class="navbar-nav">
+        ${navItems.map(n => `<button class="nav-btn ${s.page === n.id ? 'active' : ''}" onclick="navigate('${n.id}')">${n.label}</button>`).join('')}
+      </div>
+      <div class="navbar-actions">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">${isDark ? '☀️' : '🌙'}</button>
+        ${userMenu}
+      </div>
+    </nav>`;
+
+  // ─── MOBILE NAV ───
+  const mobileNav = isLoggedIn ? `
+    <nav class="mobile-nav">
+      <div class="mobile-nav-grid">
+        <button class="mobile-nav-btn ${s.page==='dashboard'?'active':''}" onclick="navigate('dashboard')">
+          <span class="mobile-nav-icon">📊</span>Início
+        </button>
+        <button class="mobile-nav-btn ${s.page==='events'?'active':''}" onclick="navigate('events')">
+          <span class="mobile-nav-icon">🗓</span>Eventos
+        </button>
+        <button class="mobile-nav-btn ${s.page==='registrations'?'active':''}" onclick="navigate('registrations')">
+          <span class="mobile-nav-icon">🎫</span>Inscrições
+        </button>
+        <button class="mobile-nav-btn ${s.page==='qrcode'?'active':''}" onclick="navigate('qrcode')">
+          <span class="mobile-nav-icon">📱</span>QR Code
+        </button>
+        <button class="mobile-nav-btn ${s.page==='certificates'?'active':''}" onclick="navigate('certificates')">
+          <span class="mobile-nav-icon">🏆</span>Certs
+        </button>
+      </div>
+    </nav>` : '';
+
+  // ─── PAGES ───
+  let pageContent = '';
+  switch(s.page) {
+    case 'landing': pageContent = renderLanding(s); break;
+    case 'auth': pageContent = renderAuth(s); break;
+    case 'dashboard': pageContent = renderDashboard(s); break;
+    case 'events': pageContent = renderEvents(s); break;
+    case 'event-detail': pageContent = renderEventDetail(s); break;
+    case 'registrations': pageContent = renderRegistrations(s); break;
+    case 'payments': pageContent = renderPayments(s); break;
+    case 'qrcode': pageContent = renderQRCode(s); break;
+    case 'certificates': pageContent = renderCertificates(s); break;
+    case 'admin': pageContent = renderAdmin(s); break;
+    case 'settings': pageContent = renderSettings(s); break;
+    default: pageContent = renderLanding(s);
+  }
+
+  // ─── MODALS ───
+  const modal = s.modal ? renderModal(s) : '';
+
+  root.innerHTML = `
+    <div class="app-container">
+      ${navbar}
+      <div class="${isLoggedIn ? 'mobile-body-pad' : ''}">
+        ${pageContent}
+      </div>
+      ${mobileNav}
+    </div>
+    ${modal}
+  `;
+
+  // Post-render: QR code generation
+  if (s.page === 'qrcode') {
+    s.myQRCodes?.forEach(qr => {
+      const el = document.getElementById(`qr-${qr.id}`);
+      if (el && el.childNodes.length === 0) {
+        try { new QRCode(el, { text: qr.qr_token, width: 180, height: 180, colorDark: '#0A1628', colorLight: '#FFFFFF', correctLevel: QRCode.CorrectLevel.H }); } catch(e) {}
+      }
+    });
+  }
+  if (s.modal === 'show-qr' && s.modalData?.qr_token) {
+    setTimeout(() => {
+      const el = document.getElementById('modal-qr');
+      if (el && el.childNodes.length === 0) {
+        try { new QRCode(el, { text: s.modalData.qr_token, width: 200, height: 200, colorDark: '#0A1628', colorLight: '#FFFFFF', correctLevel: QRCode.CorrectLevel.H }); } catch(e) {}
+      }
+    }, 100);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PAGE: LANDING
+// ═══════════════════════════════════════════════════════════
+function renderLanding(s) {
+  return `
+  <div>
+    <section class="landing-hero">
+      <div class="hero-badge">🎓 Plataforma de Eventos Acadêmicos da FASUP</div>
+      <h1 class="hero-title">Conecte-se ao<br/><span>conhecimento</span> que transforma</h1>
+      <p class="hero-sub">Participe de eventos, workshops e palestras da Faculdade FASUP. Inscreva-se, acompanhe presença e receba certificados digitais.</p>
+      <div class="hero-btns">
+        <button class="btn btn-primary btn-lg" onclick="navigate('${s.session ? 'events' : 'auth'}')">
+          ${s.session ? '🗓 Ver Eventos' : '🚀 Começar Agora'}
+        </button>
+        <button class="btn btn-secondary btn-lg" onclick="navigate('events')">Explorar Eventos</button>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="hero-stat-val">+50</div><div class="hero-stat-label">Eventos</div></div>
+        <div class="hero-stat"><div class="hero-stat-val">+1k</div><div class="hero-stat-label">Participantes</div></div>
+        <div class="hero-stat"><div class="hero-stat-val">4</div><div class="hero-stat-label">Categorias</div></div>
+        <div class="hero-stat"><div class="hero-stat-val">100%</div><div class="hero-stat-label">Digital</div></div>
+      </div>
+    </section>
+
+    <section class="features-section">
+      <h2 class="section-title">Tudo que você precisa</h2>
+      <p class="section-sub">Uma plataforma completa para a comunidade acadêmica da FASUP</p>
+      <div class="grid-3">
+        ${[
+          { icon: '📅', title: 'Gestão de Eventos', desc: 'Crie, publique e gerencie eventos acadêmicos com facilidade. Controle vagas, datas e horários.' },
+          { icon: '🎫', title: 'Inscrições Online', desc: 'Inscreva-se em eventos com poucos cliques. Acompanhe o status da sua inscrição em tempo real.' },
+          { icon: '💳', title: 'Pagamento Simplificado', desc: 'Para eventos pagos, o admin confirma seu pagamento manualmente com suporte a PIX, crédito e débito.' },
+          { icon: '📱', title: 'QR Code de Presença', desc: 'Gere seu QR Code exclusivo para validação de presença no evento. Rápido e seguro.' },
+          { icon: '📷', title: 'Validação por Câmera', desc: 'Admins validam a presença escaneando QR Codes diretamente pelo navegador, sem app extra.' },
+          { icon: '🏆', title: 'Certificados Digitais', desc: 'Receba certificados automáticos após validar presença. Código único para autenticação.' },
+        ].map(f => `
+          <div class="feature-card">
+            <div class="feature-icon">${f.icon}</div>
+            <div class="feature-title">${f.title}</div>
+            <div class="feature-desc">${f.desc}</div>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+
+    <section style="background:linear-gradient(135deg,var(--blue-900),var(--blue-700));padding:80px 24px;text-align:center">
+      <h2 style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:white;margin-bottom:16px">Pronto para começar?</h2>
+      <p style="color:rgba(255,255,255,0.7);font-size:16px;margin-bottom:32px">Crie sua conta e participe dos melhores eventos acadêmicos</p>
+      <button class="btn btn-yellow btn-lg" onclick="navigate('auth')" style="font-size:16px">🚀 Criar conta gratuita</button>
+    </section>
+
+    <footer style="background:var(--surface);border-top:1px solid var(--border);padding:32px 24px;text-align:center;color:var(--text-muted);font-size:14px">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:8px;color:var(--text-primary)">FASUP<span style="color:var(--yellow)">Events</span></div>
+      <div>© ${new Date().getFullYear()} Faculdade FASUP · Todos os direitos reservados</div>
+    </footer>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PAGE: AUTH
+// ═══════════════════════════════════════════════════════════
+function renderAuth(s) {
+  const isLogin = !s.authMode || s.authMode === 'login';
+  return `
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-logo">🎓</div>
+      <h2 class="auth-title">${isLogin ? 'Bem-vindo de volta!' : 'Criar conta'}</h2>
+      <p class="auth-sub">${isLogin ? 'Entre para acessar a plataforma de eventos' : 'Cadastre-se para participar dos eventos FASUP'}</p>
+
+      <button class="btn-google" onclick="signInGoogle()">
+        <div class="google-icon"></div>
+        Continuar com Google
+      </button>
+
+      <div class="divider-text">ou com e-mail</div>
+
+      <div id="auth-alert"></div>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+        ${!isLogin ? `
+        <div class="form-group">
+          <label class="form-label">Nome completo</label>
+          <input class="form-input" id="auth-name" type="text" placeholder="Seu nome" />
+        </div>` : ''}
+        <div class="form-group">
+          <label class="form-label">E-mail</label>
+          <input class="form-input" id="auth-email" type="email" placeholder="seu@email.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Senha</label>
+          <input class="form-input" id="auth-pass" type="password" placeholder="••••••••" />
+        </div>
+        <button class="btn btn-primary w-full" style="width:100%;padding:13px" id="auth-btn"
+          onclick="${isLogin ? 'handleLogin()' : 'handleSignUp()'}">
+          ${s.loading ? '<div class="spinner"></div>' : (isLogin ? '→ Entrar' : '→ Criar conta')}
+        </button>
+      </div>
+
+      <div class="divider"></div>
+      <div style="text-align:center;font-size:14px;color:var(--text-muted)">
+        ${isLogin ? 'Não tem conta?' : 'Já tem conta?'}
+        <button onclick="setState({authMode:'${isLogin ? 'register' : 'login'}'})"
+          style="color:var(--accent);font-weight:600;background:none;border:none;cursor:pointer;margin-left:4px">
+          ${isLogin ? 'Cadastre-se' : 'Entrar'}
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function handleLogin() {
+  const email = document.getElementById('auth-email')?.value?.trim();
+  const pass = document.getElementById('auth-pass')?.value;
+  const alertEl = document.getElementById('auth-alert');
+  if (!email || !pass) { if(alertEl) alertEl.innerHTML = `<div class="alert alert-error mb-4">❌ Preencha e-mail e senha</div>`; return; }
+  try {
+    await signIn(email, pass);
+    showToast('Login realizado! Bem-vindo 👋', 'success');
+    navigate('dashboard');
+  } catch(e) {
+    if(alertEl) alertEl.innerHTML = `<div class="alert alert-error mb-4">❌ ${e.message}</div>`;
+  }
+}
+
+async function handleSignUp() {
+  const name = document.getElementById('auth-name')?.value?.trim();
+  const email = document.getElementById('auth-email')?.value?.trim();
+  const pass = document.getElementById('auth-pass')?.value;
+  const alertEl = document.getElementById('auth-alert');
+  if (!name || !email || !pass) { if(alertEl) alertEl.innerHTML = `<div class="alert alert-error mb-4">❌ Preencha todos os campos</div>`; return; }
+  if (pass.length < 6) { if(alertEl) alertEl.innerHTML = `<div class="alert alert-error mb-4">❌ Senha deve ter ao menos 6 caracteres</div>`; return; }
+  try {
+    await signUp(name, email, pass);
+    if(alertEl) alertEl.innerHTML = `<div class="alert alert-success mb-4">✅ Conta criada! Verifique seu e-mail para confirmar.</div>`;
+    showToast('Conta criada! Confirme seu e-mail 📧', 'success');
+  } catch(e) {
+    if(alertEl) alertEl.innerHTML = `<div class="alert alert-error mb-4">❌ ${e.message}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PAGE: DASHBOARD
+// ═══════════════════════════════════════════════════════════
+function renderDashboard(s) {
+  const regs = s.myRegistrations || [];
+  const certs = s.myCertificates || [];
+  const confirmed = regs.filter(r => r.status === 'confirmed').length;
+  const pending = regs.filter(r => r.status === 'pending').length;
+  const upcomingEvents = (s.events || []).slice(0, 4);
+
+  return `
+  <div class="main-content">
+    <div class="page-header">
+      <h1>Olá, ${(s.profile?.full_name || 'Estudante').split(' ')[0]}! 👋</h1>
+      <p>Aqui está um resumo da sua atividade na plataforma</p>
+    </div>
+
+    <div class="grid-4 mb-6">
+      ${[
+        { icon: '🎫', label: 'Inscrições', value: regs.length, sub: 'total' },
+        { icon: '✅', label: 'Confirmadas', value: confirmed, sub: 'inscrições' },
+        { icon: '⏳', label: 'Pendentes', value: pending, sub: 'aguardando' },
+        { icon: '🏆', label: 'Certificados', value: certs.length, sub: 'emitidos' },
+      ].map(st => `
+        <div class="stat-card">
+          <div class="stat-icon">${st.icon}</div>
+          <div class="stat-label">${st.label}</div>
+          <div class="stat-value">${st.value}</div>
+          <div class="stat-sub">${st.sub}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3 style="font-size:16px;font-weight:700">Minhas Inscrições</h3>
+          <button class="btn btn-ghost btn-sm" onclick="navigate('registrations')">Ver todas →</button>
+        </div>
+        ${regs.length === 0 ? `
+          <div class="empty-state" style="padding:32px">
+            <div class="empty-icon">🎫</div>
+            <div class="empty-desc">Nenhuma inscrição ainda</div>
+            <button class="btn btn-primary btn-sm mt-2" onclick="navigate('events')">Explorar eventos</button>
+          </div>
+        ` : regs.slice(0, 4).map(r => `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-subtle)">
+            <div>
+              <div style="font-weight:600;font-size:14px">${r.events?.title || '—'}</div>
+              <div style="font-size:12px;color:var(--text-muted)">${fmtDate(r.events?.event_date)}</div>
+            </div>
+            ${getStatusBadge(r.status)}
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3 style="font-size:16px;font-weight:700">Próximos Eventos</h3>
+          <button class="btn btn-ghost btn-sm" onclick="navigate('events')">Ver todos →</button>
+        </div>
+        ${upcomingEvents.length === 0 ? `
+          <div class="empty-state" style="padding:32px">
+            <div class="empty-icon">📅</div>
+            <div class="empty-desc">Nenhum evento publicado</div>
+          </div>
+        ` : upcomingEvents.map(e => `
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-subtle);cursor:pointer"
+            onclick="navigate('event-detail',{selectedEvent:${JSON.stringify(e).replace(/"/g,'&quot;')}})">
+            <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--blue-700),var(--blue-500));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">
+              ${getCategoryEmoji(e.event_categories?.name)}
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.title}</div>
+              <div style="font-size:12px;color:var(--text-muted)">${fmtDate(e.event_date)}</div>
+            </div>
+            <div style="font-weight:700;font-size:13px;color:${e.event_type==='free'?'#059669':'var(--text-primary)'}">${fmtPrice(e.price)}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Ações Rápidas</h3>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="navigate('events')">🗓 Explorar Eventos</button>
+        <button class="btn btn-secondary" onclick="navigate('registrations')">🎫 Minhas Inscrições</button>
+        <button class="btn btn-secondary" onclick="navigate('qrcode')">📱 Meus QR Codes</button>
+        <button class="btn btn-secondary" onclick="navigate('certificates')">🏆 Certificados</button>
+        ${s.profile?.role === 'admin' ? `<button class="btn btn-yellow" onclick="navigate('admin')">⚙️ Painel Admin</button>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PAGE: EVENTS
+// ═══════════════════════════════════════════════════════════
+function renderEvents(s) {
+  const f = s.filters || {};
+  let events = s.events || [];
+  if (f.type && f.type !== 'all') events = events.filter(e => e.event_type === f.type);
+  if (f.search) events = events.filter(e => e.title.toLowerCase().includes(f.search.toLowerCase()));
+
+  const categories = ['all', ...new Set((s.events||[]).map(e => e.event_categories?.name).filter(Boolean))];
+
+  return `
+  <div class="main-content">
+    <div class="page-header-row mb-6">
+      <div>
+        <h1>Eventos Acadêmicos</h1>
+        <p>${events.length} evento${events.length !== 1 ? 's' : ''} disponíve${events.length !== 1 ? 'is' : 'l'}</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input class="form-input" style="width:220px" placeholder="🔍 Buscar evento..." value="${f.search||''}"
+          oninput="setState({filters:{...state.filters,search:this.value}})" />
+        <select class="form-select" style="width:140px" onchange="setState({filters:{...state.filters,type:this.value}})">
+          <option value="all" ${f.type==='all'?'selected':''}>Todos</option>
+          <option value="free" ${f.type==='free'?'selected':''}>Gratuitos</option>
+          <option value="paid" ${f.type==='paid'?'selected':''}>Pagos</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="chip-row mb-6">
+      ${categories.map(c => `
+        <button class="chip ${f.category===c?'active':''}" onclick="setState({filters:{...state.filters,category:'${c}'}})">
+          ${c==='all'?'🏫 Todos':getCategoryEmoji(c)+' '+c}
+        </button>`).join('')}
+    </div>
+
+    ${events.length === 0 ? `
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">Nenhum evento encontrado</div>
+        <div class="empty-desc">Tente ajustar os filtros ou volte em breve para novos eventos</div>
+        <button class="btn btn-primary mt-4" onclick="setState({filters:{category:'all',type:'all',search:''}})">Limpar filtros</button>
+      </div>
+    ` : `
+      <div class="grid-2">
+        ${events.map(e => renderEventCard(e)).join('')}
+      </div>
+    `}
+  </div>`;
+}
+
+function renderEventCard(e) {
+  const pct = filledPct(e);
+  const full = e.filled_slots >= e.max_slots;
+  return `
+  <div class="event-card" onclick="navigate('event-detail',{selectedEvent:${JSON.stringify(e).replace(/"/g,'&quot;')}})">
+    <div class="event-card-banner">
+      ${e.banner_url ? `<img src="${e.banner_url}" alt="${e.title}" onerror="this.style.display='none'"/>` : ''}
+      <div class="event-card-banner-text">${e.title}</div>
+    </div>
+    <div class="event-card-body">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div class="event-card-title">${e.title}</div>
+        ${full ? `<span class="badge badge-red" style="flex-shrink:0">Lotado</span>` : getStatusBadge(e.status)}
+      </div>
+      <div class="event-card-meta">
+        <div class="event-meta-item"><span class="event-meta-icon">📅</span>${fmtDate(e.event_date)}</div>
+        <div class="event-meta-item"><span class="event-meta-icon">⏰</span>${e.start_time?.slice(0,5)||'—'} – ${e.end_time?.slice(0,5)||'—'}</div>
+        ${e.location ? `<div class="event-meta-item"><span class="event-meta-icon">📍</span>${e.location}</div>` : ''}
+        <div class="event-meta-item"><span class="event-meta-icon">🎓</span>${e.workload_hours}h · ${e.event_categories?.name||'Geral'}</div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px">
+          <span>${e.filled_slots}/${e.max_slots} vagas</span>
+          <span>${pct}%</span>
+        </div>
+        <div class="slots-bar"><div class="slots-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="event-card-footer">
+        <div class="event-price ${e.event_type==='free'?'free':''}">${fmtPrice(e.price)}</div>
+        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();${state.session?`registerForEvent('${e.id}')`:`navigate('auth')`}" ${full?'disabled':''}>
+          ${full ? 'Lotado' : 'Inscrever-se'}
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PAGE: EVENT DETAIL
+// ═══════════════════════════════════════════════════════════
+function renderEventDetail(s) {
+  const e = s.selectedEvent;
+  if (!e) return `<div class="main-content"><div class="empty-state"><div class="empty-icon">❌</div><div class="empty-title">Evento não encontrado</div><button class="btn btn-primary mt-4" onclick="navigate('events')">← Voltar</button></div></div>`;
+  const pct = filledPct(e);
+  const full = e.filled_slots >= e.max_slots;
+  const isAlreadyRegistered = (s.myRegistrations||[]).some(r => r.event_id === e.id);
+
+  return `
+  <div class="main-content">
+    <button class="btn btn-ghost mb-4" onclick="navigate('events')">← Voltar para eventos</button>
+    <div class="event-detail-banner">
+      ${e.banner_url ? `<img src="${e.banner_url}" alt="${e.title}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'"/>` : ''}
+      <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(10,22,40,0.85),rgba(30,80,160,0.7));display:flex;align-items:center;justify-content:center;text-align:center;padding:24px">
+        <div>
+          <div class="badge badge-blue mb-2">${getCategoryEmoji(e.event_categories?.name)} ${e.event_categories?.name||'Geral'}</div>
+          <h1 style="color:white;font-size:clamp(24px,4vw,40px);font-weight:800;font-family:'Syne',sans-serif">${e.title}</h1>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start">
+      <div>
+        <div class="card mb-4">
+          <h2 style="font-size:20px;font-weight:700;margin-bottom:16px">Sobre o evento</h2>
+          <p style="color:var(--text-secondary);line-height:1.8">${e.description||'Nenhuma descrição disponível para este evento.'}</p>
+        </div>
+        <div class="card">
+          <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Informações</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            ${[
+              ['📅', 'Data', fmtDate(e.event_date)],
+              ['⏰', 'Horário', `${e.start_time?.slice(0,5)||'—'} às ${e.end_time?.slice(0,5)||'—'}`],
+              ['📍', 'Local', e.location||'A definir'],
+              ['🎓', 'Carga Horária', `${e.workload_hours}h`],
+              ['👥', 'Vagas', `${e.filled_slots}/${e.max_slots}`],
+              ['💳', 'Tipo', e.event_type==='free'?'Gratuito':'Pago'],
+            ].map(([icon,label,val]) => `
+              <div>
+                <div style="font-size:12px;color:var(--text-muted);margin-bottom:3px">${label}</div>
+                <div style="font-weight:600;font-size:14px">${icon} ${val}</div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="mt-4">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Ocupação das vagas</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${pct}% preenchido</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="position:sticky;top:80px">
+          <div style="font-size:36px;font-weight:800;font-family:'Syne',sans-serif;color:${e.event_type==='free'?'#059669':'var(--text-primary)'};margin-bottom:16px">
+            ${fmtPrice(e.price)}
+          </div>
+          ${isAlreadyRegistered ? `
+            <div class="alert alert-success mb-4">✅ Você já está inscrito neste evento</div>
+            <button class="btn btn-secondary w-full" onclick="navigate('registrations')">Ver minha inscrição →</button>
+          ` : full ? `
+            <div class="alert alert-error mb-4">❌ Evento lotado</div>
+            <button class="btn btn-secondary w-full" disabled>Sem vagas</button>
+          ` : `
+            <button class="btn btn-primary w-full btn-lg" onclick="${state.session?`registerForEvent('${e.id}')`:`navigate('auth')`}" style="margin-bottom:8px">
+              ${state.session ? '🎫 Inscrever-se agora' : '🔐 Entrar para se inscrever'}
+            </button>
+            ${e.event_type==='paid'?`<div class="text-xs text-muted text-center mt-2">Pagamento confirmado pelo admin após inscrição</div>`:''}
+          `}
+          <div class="divider"></div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.8">
+            <div>🏆 Certificado ${e.certificate_enabled?'disponível':'não disponível'}</div>
+            <div>📊 ${e.max_slots - e.filled_slots} vagas restantes</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PAGE: REGISTRATIONS
+// ═══════════════════════════════════════════════════════════
+function renderRegistrations(s) {
+  const regs = s.myRegistrations || [];
+  return `
+  <div class="main-content">
+    <div class="page-header">
+      <h1>Minhas Inscrições</h1>
+      <p>Gerencie todas as suas inscrições em eventos</p>
+    </div>
+    ${regs.length === 0 ? `
+      <div class="card">
+        <div class="empty-state">
+          <div class="empty-icon">🎫</div>
+          <div class="empty-title">Nenhuma inscrição ainda</div>
+          <div class="empty-desc">Explore nossos eventos e inscreva-se nos que mais te interessam</div>
+          <button class="btn btn-primary mt-4" onclick="navigate('events')">🗓 Explorar Eventos</button>
+        </div>
+      </div>
+    ` : `
+      <div style="display:flex;flex-direction:column;gap:16px">
+        ${regs.map(r => `
+          <div class="card">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+              <div style="flex:1;min-width:200px">
+                <h3 style="font-size:17px;font-weight:700;margin-bottom:8px">${r.events?.title||'Evento'}</h3>
+                <div style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--text-secondary)">
+                  <span>📅 ${fmtDate(r.events?.event_date)}</span>
+                  <span>⏰ ${r.events?.start_time?.slice(0,5)||'—'} – ${r.events?.end_time?.slice(0,5)||'—'}</span>
+                  ${r.events?.location?`<span>📍 ${r.events.location}</span>`:''}
+                  <span>🎓 ${r.events?.workload_hours||0}h de carga horária</span>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
+                ${getStatusBadge(r.status)}
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  ${r.status === 'confirmed' ? `
+                    <button class="btn btn-secondary btn-sm" onclick="generateQR('${r.id}')">📱 Gerar QR</button>
+                    <button class="btn btn-secondary btn-sm" onclick="issueCertificate('${r.id}')">🏆 Certificado</button>
+                  ` : ''}
+                  ${r.status === 'pending' && r.payment_required ? `
+                    <button class="btn btn-yellow btn-sm" onclick="navigate('payments')">💳 Ver Pagamento</button>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+            ${r.confirmed_at?`<div style="font-size:12px;color:var(--text-muted);margin-top:8px;border-top:1px solid var(--border-subtle);padding-top:8px">Confirmado em ${fmtDateTime(r.confirmed_at)}</div>`:''}
+          </div>
+        `).join('')}
+      </div>
+    `}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PAGE: PAYMENTS
+// ═══════════════════════════════════════════════════════════
+function renderPayments(s) {
+  const pays = s.myPayments || [];
+  return `
+  <div class="main-content">
+    <div class="page-header">
+      <h1>Meus Pagamentos</h1>
+      <p>Histórico de pagamentos dos seus eventos</p>
+    </div>
+    ${pays.length === 0 ? `
+      <div class="card">
+        <div class="empty-state">
+          <div class="empty-icon">💳</div>
+          <div class="empty-title">Nenhum pagamento encontrado</div>
+          <div class="empty-desc">Seus pagamentos de eventos aparecem aqui</div>
+        </div>
+      </div>
+    ` : `
+      <div style="display:flex;flex-direction:column;gap:12px">
+        ${pays.map(p => `
+          <div class="payment-card">
+            <div style="flex:1;min-width:180px">
+              <div style="font-weight:700;font-size:16px;margin-bottom:4px">${p.events?.title||'Evento'}</div>
+              <div style="font-size:13px;color:var(--text-muted)">📅 ${fmtDate(p.events?.event_date)}</div>
+              ${p.method?`<div style="font-size:12px;color:var(--text-muted);margin-top:3px">💳 ${p.method.replace('_',' ').toUpperCase()}</div>`:''}
+              ${p.paid_at?`<div style="font-size:12px;color:var(--text-muted)">✅ Pago em ${fmtDateTime(p.paid_at)}</div>`:''}
+            </div>
+            <div style="text-align:right">
+              <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px">R$ ${parseFloat(p.amount).toFixed(2).replace('.',',')}</div>
+              ${getStatusBadge(p.status)}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PAGE: QR CODE
+// ═══════════════════════════════════════════════════════════
+function renderQRCode(s) {
+  const qrs = s.myQRCodes || [];
+  const regs = (s.myRegistrations || []).filter(r => r.status === 'confirmed');
+
+  return `
+  <div class="main-content">
+    <div class="page-header">
+      <h1>Meus QR Codes</h1>
+      <p>Use o QR Code para validar sua presença nos eventos</p>
+    </div>
+
+    ${regs.length > 0 && qrs.filter(q => q.status==='active').length === 0 ? `
+      <div class="alert alert-info mb-6">
+        💡 <strong>Dica:</strong> Você tem inscrições confirmadas! Vá em "Minhas Inscrições" e clique em "Gerar QR" para gerar seu código de presença.
+      </div>
+    ` : ''}
+
+    ${qrs.length === 0 ? `
+      <div class="card">
+        <div class="empty-state">
+          <div class="empty-icon">📱</div>
+          <div class="empty-title">Nenhum QR Code gerado</div>
+          <div class="empty-desc">Confirme sua inscrição em um evento e gere seu QR Code de presença</div>
+          <button class="btn btn-primary mt-4" onclick="navigate('registrations')">🎫 Minhas Inscrições</button>
+        </div>
+      </div>
+    ` : `
+      <div class="grid-2">
+        ${qrs.map(q => `
+          <div class="card" style="text-align:center">
+            <div style="margin-bottom:12px">
+              <h3 style="font-size:16px;font-weight:700">${q.events?.title||'Evento'}</h3>
+              <div style="font-size:13px;color:var(--text-muted)">📅 ${fmtDate(q.events?.event_date)} · ⏰ ${q.events?.start_time?.slice(0,5)||'—'}</div>
+            </div>
+            ${getStatusBadge(q.status)}
+            <div style="margin:20px auto;width:fit-content">
+              <div class="qr-container">
+                ${q.status==='active' ? `<div id="qr-${q.id}"></div>` : `<div style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:48px">${q.status==='used'?'✅':'⏰'}</div>`}
+              </div>
+            </div>
+            <div style="font-family:monospace;font-size:11px;color:var(--text-muted);word-break:break-all;padding:0 8px">${q.qr_token}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:8px">Expira: ${fmtDateTime(q.expires_at)}</div>
+            ${q.used_at?`<div style="font-size:12px;color:#059669;margin-top:4px">✅ Usado em ${fmtDateTime(q.used_at)}</div>`:''}
+          </div>
+        `).join('')}
+      </div>
+    `}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PAGE: CERTIFICATES
+// ═══════════════════════════════════════════════════════════
+function renderCertificates(s) {
+  const certs = s.myCertificates || [];
+  return `
+  <div class="main-content">
+    <div class="page-header">
+      <h1>Meus Certificados</h1>
+      <p>Certificados de participação nos eventos acadêmicos</p>
+    </div>
+    ${certs.length === 0 ? `
+      <div class="card">
+        <div class="empty-state">
+          <div class="empty-icon">🏆</div>
+          <div class="empty-title">Nenhum certificado ainda</div>
+          <div class="empty-desc">Participe de eventos, valide sua presença e solicite seu certificado</div>
+          <button class="btn btn-primary mt-4" onclick="navigate('events')">🗓 Ver Eventos</button>
+        </div>
+      </div>
+    ` : `
+      <div class="grid-2">
+        ${certs.map(c => `
+          <div class="certificate-card">
+            <div class="certificate-badge">🏆</div>
+            <div class="certificate-title">Certificado de Participação</div>
+            <div class="certificate-event">${c.events?.title||'Evento Acadêmico'}</div>
+            <div class="certificate-meta">
+              <span>📅 ${fmtDate(c.events?.event_date)}</span>
+              <span>🎓 ${c.events?.workload_hours||0}h</span>
+              <span>✅ ${fmtDateTime(c.issued_at)}</span>
+            </div>
+            <div class="certificate-code" style="margin-top:16px">
+              🔑 ${c.certificate_code}
+            </div>
+            <div style="margin-top:16px;display:flex;gap:8px">
+              <button class="btn btn-yellow btn-sm" onclick="navigator.clipboard.writeText('${c.certificate_code}').then(()=>showToast('Código copiado!','success'))">
+                📋 Copiar código
+              </button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PAGE: SETTINGS
+// ═══════════════════════════════════════════════════════════
+function renderSettings(s) {
+  const isDark = s.theme === 'dark';
+  return `
+  <div class="main-content">
+    <div class="page-header">
+      <h1>Configurações</h1>
+      <p>Personalize sua experiência na plataforma</p>
+    </div>
+
+    <div style="max-width:600px;display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:20px">Aparência</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-weight:600;margin-bottom:3px">${isDark ? '🌙 Modo Escuro' : '☀️ Modo Claro'}</div>
+            <div style="font-size:13px;color:var(--text-muted)">Alternar entre tema claro e escuro</div>
+          </div>
+          <button class="toggle ${isDark?'on':''}" onclick="toggleTheme()"></button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:20px">Meu Perfil</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          ${[
+            ['Nome', s.profile?.full_name||'—'],
+            ['E-mail', s.profile?.email||'—'],
+            ['Tipo de conta', s.profile?.role==='admin'?'⚙️ Administrador':s.profile?.is_student?'🎓 Estudante':'👤 Externo'],
+            ['Membro desde', fmtDate(s.profile?.created_at?.split('T')[0]||null)],
+          ].map(([l,v]) => `
+            <div>
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:3px">${l}</div>
+              <div style="font-weight:600">${v}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Conta</h3>
+        <button class="btn btn-danger" onclick="signOut()">🚪 Sair da conta</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PAGE: ADMIN
+// ═══════════════════════════════════════════════════════════
+function renderAdmin(s) {
+  const sec = s.adminSection || 'overview';
+  const menu = [
+    { id: 'overview', icon: '📊', label: 'Visão Geral' },
+    { id: 'events', icon: '🗓', label: 'Eventos' },
+    { id: 'registrations', icon: '🎫', label: 'Inscrições' },
+    { id: 'payments', icon: '💳', label: 'Pagamentos' },
+    { id: 'attendance', icon: '✅', label: 'Presenças' },
+    { id: 'scanner', icon: '📷', label: 'Escanear QR' },
+  ];
+
+  let content = '';
+  if (sec === 'overview') content = renderAdminOverview(s);
+  else if (sec === 'events') content = renderAdminEvents(s);
+  else if (sec === 'registrations') content = renderAdminRegistrations(s);
+  else if (sec === 'payments') content = renderAdminPayments(s);
+  else if (sec === 'attendance') content = renderAdminAttendance(s);
+  else if (sec === 'scanner') content = renderAdminScanner(s);
+
+  return `
+  <div class="main-content">
+    <div class="page-header">
+      <h1>⚙️ Painel Administrativo</h1>
+      <p>Gerencie todos os aspectos da plataforma FASUPEvents</p>
+    </div>
+    <div class="admin-layout">
+      <div class="admin-sidebar">
+        ${menu.map(m => `
+          <button class="sidebar-btn ${sec===m.id?'active':''}" onclick="setState({adminSection:'${m.id}'})">
+            <span>${m.icon}</span> ${m.label}
+          </button>
+        `).join('')}
+      </div>
+      <div>${content}</div>
+    </div>
+  </div>`;
+}
+
+function renderAdminOverview(s) {
+  const evts = s.allEvents || [];
+  const regs = s.allRegistrations || [];
+  const pays = s.allPayments || [];
+  const pendingPayments = pays.filter(p => p.status === 'pending').length;
+
+  return `
+    <div class="grid-4 mb-6">
+      ${[
+        { icon: '🗓', label: 'Total Eventos', value: evts.length, sub: 'cadastrados' },
+        { icon: '🎫', label: 'Inscrições', value: regs.length, sub: 'total' },
+        { icon: '⏳', label: 'Pag. Pendentes', value: pendingPayments, sub: 'aguardando' },
+        { icon: '✅', label: 'Presenças', value: (s.allAttendance||[]).length, sub: 'validadas' },
+      ].map(st => `
+        <div class="stat-card">
+          <div class="stat-icon">${st.icon}</div>
+          <div class="stat-label">${st.label}</div>
+          <div class="stat-value">${st.value}</div>
+          <div class="stat-sub">${st.sub}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="card">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">Pagamentos Pendentes</h3>
+      ${pays.filter(p=>p.status==='pending').length === 0 ? `
+        <div class="empty-state" style="padding:32px"><div class="empty-icon">✅</div><div class="empty-desc">Nenhum pagamento pendente</div></div>
+      ` : `
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Usuário</th><th>Evento</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody>
+              ${pays.filter(p=>p.status==='pending').slice(0,10).map(p => `
+                <tr>
+                  <td><div style="font-weight:600">${p.profiles?.full_name||'—'}</div><div style="font-size:12px;color:var(--text-muted)">${p.profiles?.email||''}</div></td>
+                  <td>${p.events?.title||'—'}</td>
+                  <td style="font-weight:700">R$ ${parseFloat(p.amount).toFixed(2).replace('.',',')}</td>
+                  <td>${getStatusBadge(p.status)}</td>
+                  <td>
+                    <button class="btn btn-primary btn-sm" onclick="openConfirmPaymentModal('${p.id}')">✅ Confirmar</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `}
+    </div>`;
+}
+
+function renderAdminEvents(s) {
+  const evts = s.allEvents || [];
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="font-size:18px;font-weight:700">Gerenciamento de Eventos</h3>
+      <button class="btn btn-primary btn-sm" onclick="openNewEventModal()">➕ Novo Evento</button>
+    </div>
+    ${evts.length === 0 ? `<div class="empty-state"><div class="empty-icon">🗓</div><div class="empty-title">Nenhum evento</div></div>` : `
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Evento</th><th>Data</th><th>Tipo</th><th>Vagas</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody>
+          ${evts.map(e => `
+            <tr>
+              <td><div style="font-weight:600">${e.title}</div><div style="font-size:12px;color:var(--text-muted)">${e.event_categories?.name||'—'}</div></td>
+              <td>${fmtDate(e.event_date)}</td>
+              <td>${e.event_type==='free'?'<span class="badge badge-green">Gratuito</span>':'<span class="badge badge-blue">Pago</span>'}</td>
+              <td><span style="font-weight:600">${e.filled_slots}/${e.max_slots}</span></td>
+              <td>${getStatusBadge(e.status)}</td>
+              <td style="display:flex;gap:6px">
+                ${e.status==='draft'?`<button class="btn btn-primary btn-sm" onclick="publishEvent('${e.id}')">🟢 Publicar</button>`:''}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`}`;
+}
+
+function renderAdminRegistrations(s) {
+  const regs = s.allRegistrations || [];
+  return `
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:16px">Todas as Inscrições</h3>
+    ${regs.length === 0 ? `<div class="empty-state"><div class="empty-icon">🎫</div><div class="empty-title">Nenhuma inscrição</div></div>` : `
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Participante</th><th>Evento</th><th>Status</th><th>Data</th></tr></thead>
+        <tbody>
+          ${regs.map(r => `
+            <tr>
+              <td><div style="font-weight:600">${r.profiles?.full_name||'—'}</div><div style="font-size:12px;color:var(--text-muted)">${r.profiles?.email||''}</div></td>
+              <td>${r.events?.title||'—'}</td>
+              <td>${getStatusBadge(r.status)}</td>
+              <td style="font-size:13px;color:var(--text-muted)">${fmtDateTime(r.created_at)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`}`;
+}
+
+function renderAdminPayments(s) {
+  const pays = s.allPayments || [];
+  return `
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:16px">Gerenciamento de Pagamentos</h3>
+    ${pays.length === 0 ? `<div class="empty-state"><div class="empty-icon">💳</div><div class="empty-title">Nenhum pagamento</div></div>` : `
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Participante</th><th>Evento</th><th>Valor</th><th>Método</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody>
+          ${pays.map(p => `
+            <tr>
+              <td><div style="font-weight:600">${p.profiles?.full_name||'—'}</div><div style="font-size:12px;color:var(--text-muted)">${p.profiles?.email||''}</div></td>
+              <td>${p.events?.title||'—'}</td>
+              <td style="font-weight:700">R$ ${parseFloat(p.amount).toFixed(2).replace('.',',')}</td>
+              <td>${p.method||'<span style="color:var(--text-muted)">—</span>'}</td>
+              <td>${getStatusBadge(p.status)}</td>
+              <td>
+                ${p.status==='pending'?`<button class="btn btn-primary btn-sm" onclick="openConfirmPaymentModal('${p.id}')">✅ Confirmar</button>`:'—'}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`}`;
+}
+
+function renderAdminAttendance(s) {
+  const logs = s.allAttendance || [];
+  return `
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:16px">Registro de Presenças</h3>
+    ${logs.length === 0 ? `<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">Nenhuma presença validada ainda</div></div>` : `
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Participante</th><th>Evento</th><th>Validado em</th><th>Método</th></tr></thead>
+        <tbody>
+          ${logs.map(l => `
+            <tr>
+              <td><div style="font-weight:600">${l.profiles?.full_name||'—'}</div><div style="font-size:12px;color:var(--text-muted)">${l.profiles?.email||''}</div></td>
+              <td>${l.events?.title||'—'}</td>
+              <td style="font-size:13px">${fmtDateTime(l.validated_at)}</td>
+              <td><span class="badge badge-blue">${l.validation_method||'qr_code'}</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`}`;
+}
+
+function renderAdminScanner(s) {
+  return `
+    <div style="max-width:480px">
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:8px">📷 Escanear QR Code</h3>
+      <p style="color:var(--text-secondary);font-size:14px;margin-bottom:24px">Use a câmera para validar a presença de participantes nos eventos.</p>
+
+      <div id="scanner-status" class="alert alert-info mb-4">📷 Câmera pronta para escanear</div>
+
+      <div class="scanner-container" id="scanner-container" style="display:none">
+        <video id="scanner-video" class="scanner-video" playsinline muted></video>
+        <div class="scanner-overlay">
+          <div class="scanner-frame"><div class="scanner-line"></div></div>
+        </div>
+      </div>
+
+      <canvas id="scanner-canvas" style="display:none"></canvas>
+
+      <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="start-scan-btn" onclick="startScanner()">📷 Iniciar Câmera</button>
+        <button class="btn btn-secondary" id="stop-scan-btn" onclick="stopScanner()" style="display:none">⏹ Parar</button>
+      </div>
+
+      <div class="divider-text">ou inserir manualmente</div>
+
+      <div class="form-group">
+        <label class="form-label">Token do QR Code</label>
+        <input class="form-input" id="manual-token" type="text" placeholder="Cole o token aqui..." />
+      </div>
+      <button class="btn btn-yellow mt-4" onclick="validateManualToken()">✅ Validar Token</button>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MODALS
+// ═══════════════════════════════════════════════════════════
+function renderModal(s) {
+  let content = '';
+  if (s.modal === 'confirm-payment') content = renderConfirmPaymentModal(s);
+  else if (s.modal === 'new-event') content = renderNewEventModal(s);
+  else if (s.modal === 'show-qr') content = renderShowQRModal(s);
+  if (!content) return '';
+  return `<div class="modal-overlay" onclick="if(event.target===this)closeModal()">${content}</div>`;
+}
+
+function renderConfirmPaymentModal(s) {
+  return `
+  <div class="modal">
+    <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px">Confirmar Pagamento</h2>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px">Confirme o pagamento do participante manualmente</p>
+    <div id="payment-modal-alert"></div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="form-group">
+        <label class="form-label">Método de pagamento</label>
+        <select class="form-select" id="pay-method">
+          <option value="pix">PIX</option>
+          <option value="credit_card">Cartão de Crédito</option>
+          <option value="debit_card">Cartão de Débito</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ID da transação (opcional)</label>
+        <input class="form-input" id="pay-txid" type="text" placeholder="Ex: E00038166202407..." />
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:24px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="handleConfirmPayment()">✅ Confirmar Pagamento</button>
+    </div>
+  </div>`;
+}
+
+function renderNewEventModal(s) {
+  return `
+  <div class="modal modal-lg">
+    <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px">Novo Evento</h2>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px">Preencha os dados para criar um novo evento</p>
+    <div id="event-modal-alert"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Título do Evento</label>
+        <input class="form-input" id="ev-title" type="text" placeholder="Ex: Workshop de Saúde Mental" />
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Descrição</label>
+        <textarea class="form-textarea" id="ev-desc" placeholder="Descreva o evento..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Data</label>
+        <input class="form-input" id="ev-date" type="date" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Local</label>
+        <input class="form-input" id="ev-location" type="text" placeholder="Auditório principal" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Horário início</label>
+        <input class="form-input" id="ev-start" type="time" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Horário fim</label>
+        <input class="form-input" id="ev-end" type="time" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Carga Horária (h)</label>
+        <input class="form-input" id="ev-hours" type="number" min="1" placeholder="4" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Vagas</label>
+        <input class="form-input" id="ev-slots" type="number" min="1" placeholder="100" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tipo</label>
+        <select class="form-select" id="ev-type" onchange="document.getElementById('ev-price-group').style.display=this.value==='paid'?'flex':'none'">
+          <option value="free">Gratuito</option>
+          <option value="paid">Pago</option>
+        </select>
+      </div>
+      <div class="form-group" id="ev-price-group" style="display:none">
+        <label class="form-label">Preço (R$)</label>
+        <input class="form-input" id="ev-price" type="number" min="0" step="0.01" placeholder="50.00" />
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:24px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="handleCreateEvent()">➕ Criar Evento</button>
+    </div>
+  </div>`;
+}
+
+function renderShowQRModal(s) {
+  const qr = s.modalData;
+  return `
+  <div class="modal" style="text-align:center">
+    <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px">QR Code de Presença</h2>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px">${qr?.events?.title||'Evento'}</p>
+    <div style="margin:0 auto 24px;width:fit-content">
+      <div class="qr-container"><div id="modal-qr"></div></div>
+    </div>
+    <div style="font-family:monospace;font-size:11px;color:var(--text-muted);word-break:break-all;padding:0 8px;margin-bottom:16px">${qr?.qr_token||''}</div>
+    <button class="btn btn-secondary w-full" onclick="closeModal()">Fechar</button>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MODAL ACTIONS
+// ═══════════════════════════════════════════════════════════
+function openConfirmPaymentModal(payId) {
+  setState({ modal: 'confirm-payment', modalPaymentId: payId });
+}
+function openNewEventModal() {
+  setState({ modal: 'new-event' });
+}
+function closeModal() {
+  setState({ modal: null, modalData: null, modalPaymentId: null });
+}
+
+async function handleConfirmPayment() {
+  const method = document.getElementById('pay-method')?.value;
+  const txid = document.getElementById('pay-txid')?.value;
+  const alertEl = document.getElementById('payment-modal-alert');
+  const ok = await confirmPayment(state.modalPaymentId, method, txid);
+  if (ok) closeModal();
+  else if(alertEl) alertEl.innerHTML = `<div class="alert alert-error mb-4">❌ Erro ao confirmar pagamento</div>`;
+}
+
+async function handleCreateEvent() {
+  const alertEl = document.getElementById('event-modal-alert');
+  const title = document.getElementById('ev-title')?.value?.trim();
+  const desc = document.getElementById('ev-desc')?.value?.trim();
+  const date = document.getElementById('ev-date')?.value;
+  const start = document.getElementById('ev-start')?.value;
+  const end = document.getElementById('ev-end')?.value;
+  const location = document.getElementById('ev-location')?.value?.trim();
+  const hours = document.getElementById('ev-hours')?.value;
+  const slots = document.getElementById('ev-slots')?.value;
+  const type = document.getElementById('ev-type')?.value;
+  const price = type === 'paid' ? (document.getElementById('ev-price')?.value || 0) : 0;
+
+  if (!title || !date || !start || !end || !slots) {
+    if(alertEl) alertEl.innerHTML = `<div class="alert alert-error mb-4">❌ Preencha todos os campos obrigatórios</div>`;
+    return;
+  }
+
+  const { error } = await sb.from('events').insert({
+    title, description: desc, event_date: date, start_time: start, end_time: end,
+    location, workload_hours: hours||0, max_slots: parseInt(slots),
+    event_type: type, price: parseFloat(price)||0, status: 'draft',
+    created_by: state.profile.id
+  });
+
+  if (error) { if(alertEl) alertEl.innerHTML = `<div class="alert alert-error mb-4">❌ ${error.message}</div>`; return; }
+  showToast('Evento criado com sucesso! 🎉', 'success');
+  closeModal();
+  await loadAllEvents();
+}
+
+async function publishEvent(eventId) {
+  const { error } = await sb.from('events').update({ status: 'published', published_at: new Date().toISOString() }).eq('id', eventId);
+  if (error) { showToast(error.message, 'error'); return; }
+  showToast('Evento publicado! 🟢', 'success');
+  await loadAllEvents();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  QR SCANNER
+// ═══════════════════════════════════════════════════════════
+let scannerStream = null;
+let scannerInterval = null;
+
+async function startScanner() {
+  const status = document.getElementById('scanner-status');
+  const container = document.getElementById('scanner-container');
+  const startBtn = document.getElementById('start-scan-btn');
+  const stopBtn = document.getElementById('stop-scan-btn');
+  const video = document.getElementById('scanner-video');
+
+  try {
+    scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    video.srcObject = scannerStream;
+    await video.play();
+    container.style.display = 'block';
+    startBtn.style.display = 'none';
+    stopBtn.style.display = 'inline-flex';
+    if (status) status.innerHTML = '📷 Aponte para o QR Code do participante...';
+
+    const canvas = document.getElementById('scanner-canvas');
+    const ctx = canvas.getContext('2d');
+
+    scannerInterval = setInterval(async () => {
+      if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height);
+      if (code?.data) {
+        stopScanner();
+        if (status) status.innerHTML = `<div class="alert alert-info">🔍 Token detectado: <code>${code.data.substring(0,20)}...</code><br/>Validando...</div>`;
+        const ok = await validateAttendance(code.data);
+        if (ok) {
+          if (status) status.innerHTML = `<div class="alert alert-success">✅ Presença validada com sucesso!</div>`;
+          await loadAllAttendance();
+        } else {
+          if (status) status.innerHTML = `<div class="alert alert-error">❌ Falha na validação. Tente novamente.</div>`;
+        }
+      }
+    }, 200);
+  } catch(e) {
+    if (status) status.innerHTML = `<div class="alert alert-error">❌ Erro ao acessar câmera: ${e.message}</div>`;
+  }
+}
+
+function stopScanner() {
+  if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
+  if (scannerInterval) { clearInterval(scannerInterval); scannerInterval = null; }
+  const container = document.getElementById('scanner-container');
+  const startBtn = document.getElementById('start-scan-btn');
+  const stopBtn = document.getElementById('stop-scan-btn');
+  if (container) container.style.display = 'none';
+  if (startBtn) startBtn.style.display = 'inline-flex';
+  if (stopBtn) stopBtn.style.display = 'none';
+}
+
+async function validateManualToken() {
+  const token = document.getElementById('manual-token')?.value?.trim();
+  const status = document.getElementById('scanner-status');
+  if (!token) { showToast('Cole o token no campo', 'error'); return; }
+  if (status) status.innerHTML = `<div class="alert alert-info">🔍 Validando token...</div>`;
+  const ok = await validateAttendance(token);
+  if (ok) {
+    if (status) status.innerHTML = `<div class="alert alert-success">✅ Presença validada com sucesso!</div>`;
+    document.getElementById('manual-token').value = '';
+    await loadAllAttendance();
+  } else {
+    if (status) status.innerHTML = `<div class="alert alert-error">❌ Token inválido ou já utilizado</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GLOBAL ACTIONS
+// ═══════════════════════════════════════════════════════════
+function toggleTheme() {
+  const newTheme = state.theme === 'dark' ? 'light' : 'dark';
+  setTheme(newTheme);
+  setState({ theme: newTheme });
+}
+function toggleDropdown() {
+  setState({ dropdownOpen: !state.dropdownOpen });
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', (e) => {
+  if (state.dropdownOpen && !e.target.closest('#user-dropdown')) {
+    setState({ dropdownOpen: false });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+subscribe(render);
+
+async function init() {
+  // Check for OAuth redirect
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    const profile = await loadProfile(session.user.id);
+    setState({ session, profile, page: 'dashboard' });
+    await loadPublicEvents();
+    await loadMyRegistrations();
+    await loadMyCertificates();
+  } else {
+    setState({ page: 'landing' });
+    await loadPublicEvents();
+  }
+
+  // Listen for auth changes
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      const profile = await loadProfile(session.user.id);
+      setState({ session, profile, page: 'dashboard' });
+      showToast('Login realizado! Bem-vindo 👋', 'success');
+      await loadPublicEvents();
+      await loadMyRegistrations();
+    } else if (event === 'SIGNED_OUT') {
+      setState({ session: null, profile: null, page: 'landing' });
+    }
+  });
+}
+
+init();
+</script>
+</body>
+<button onclick="loginGoogle()">Entrar com Google</button>
+
+<script>
+  async function loginGoogle() {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google'
+    });
+
+    if (error) {
+      alert(error.message);
+      console.error(error);
+    }
+  }
+</script>
+</html>
